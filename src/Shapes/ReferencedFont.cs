@@ -58,7 +58,11 @@ internal sealed class ReferencedFont(ReferencedFontColor fontColor, A.Text aText
                 }
             }
 
-            var sdkSlidePart = (SlidePart)openXmlPart;
+            if (openXmlPart is not SlidePart sdkSlidePart)
+            {
+                return null;
+            }
+
             var bodyStyleFonts =
                 new IndentFonts(sdkSlidePart.SlideLayoutPart!.SlideMasterPart!.SlideMaster!.TextStyles!.BodyStyle!);
             var bodyStyleFont = bodyStyleFonts.FontOrNull(indentLevel);
@@ -123,9 +127,14 @@ internal sealed class ReferencedFont(ReferencedFontColor fontColor, A.Text aText
         {
             SlidePart slidePart => slidePart.SlideLayoutPart!.SlideMasterPart!.SlideMaster!.CommonSlideData!
                 .ShapeTree!,
-            _ => ((SlideLayoutPart)openXmlPart).SlideMasterPart!.SlideMaster!.CommonSlideData!
-                .ShapeTree!
+            SlideLayoutPart slideLayoutPart => slideLayoutPart.SlideMasterPart!.SlideMaster!.CommonSlideData!
+                .ShapeTree!,
+            _ => null
         };
+        if (slideOrLayoutPShapeTree == null)
+        {
+            return null;
+        }
 
         var referencedPShape = new SCPShapeTree(slideOrLayoutPShapeTree).ReferencedPShapeOrNull(pPlaceholderShape);
 

@@ -397,6 +397,7 @@ namespace ShapeCrawler.DevTests
 
             // Assert
             shape.Height.Should().BeApproximately(32m, 32m);
+            ValidatePresentation(pres);
         }
 
         [Test]

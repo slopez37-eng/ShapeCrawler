@@ -2,9 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 using ShapeCrawler.Paragraphs;
 using ShapeCrawler.Texts;
 using A = DocumentFormat.OpenXml.Drawing;
+using P = DocumentFormat.OpenXml.Presentation;
 
 // ReSharper disable PossibleMultipleEnumeration
 #pragma warning disable IDE0130
@@ -50,7 +52,16 @@ internal sealed class ParagraphPortions(A.Paragraph aParagraph) : IParagraphPort
         var aTextParent = textPortions.LastOrDefault()?.AText.Parent;
         if (aTextParent is null)
         {
-            var aRunProperties = new A.RunProperties { Language = "en-US", FontSize = 1400, Dirty = false };
+            var aRunProperties = new A.RunProperties { Language = "en-US", Dirty = false };
+
+            // Skip the historical 14pt stamp only for placeholders that actually
+            // inherit from a matching layout placeholder. Orphan <p:ph> tags with
+            // no layout counterpart fall back to the default, matching upstream.
+            if (!InheritsFromLayoutPlaceholder(aParagraph))
+            {
+                aRunProperties.FontSize = 1400;
+            }
+
             var aText = new A.Text { Text = string.Empty };
             aTextParent = new A.Run(aRunProperties, aText);
         }
@@ -67,6 +78,45 @@ internal sealed class ParagraphPortions(A.Paragraph aParagraph) : IParagraphPort
     public IEnumerator<IParagraphPortion> GetEnumerator() => this.GetPortions().GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+
+    private static bool InheritsFromLayoutPlaceholder(A.Paragraph aParagraph)
+    {
+        var pShape = aParagraph.Ancestors<P.Shape>().FirstOrDefault();
+        var slidePh = pShape?.NonVisualShapeProperties?.ApplicationNonVisualDrawingProperties
+            ?.GetFirstChild<P.PlaceholderShape>();
+        if (slidePh == null)
+        {
+            return false;
+        }
+
+        var partRoot = aParagraph.Ancestors<OpenXmlPartRootElement>().FirstOrDefault();
+        if (partRoot?.OpenXmlPart is not SlidePart slidePart)
+        {
+            return false;
+        }
+
+        var shapeTree = slidePart.SlideLayoutPart?.SlideLayout?.CommonSlideData?.ShapeTree;
+        if (shapeTree == null)
+        {
+            return false;
+        }
+
+        var slideKey = PlaceholderKey(slidePh);
+        return shapeTree.Elements<P.Shape>()
+            .Select(s => s.NonVisualShapeProperties?.ApplicationNonVisualDrawingProperties
+                ?.GetFirstChild<P.PlaceholderShape>())
+            .Where(ph => ph != null)
+            .Select(PlaceholderKey!)
+            .Any(layoutKey => layoutKey == slideKey);
+    }
+
+    private static (P.PlaceholderValues Type, uint Idx) PlaceholderKey(P.PlaceholderShape ph)
+    {
+        // Per the OOXML spec, an omitted type defaults to "obj" (Object), not Title.
+        var type = ph.Type?.Value ?? P.PlaceholderValues.Object;
+        var idx = ph.Index?.Value ?? 0u;
+        return (type, idx);
+    }
 
     private void AddText(ref OpenXmlElement? lastElement, OpenXmlElement aTextParent, string text)
     {
