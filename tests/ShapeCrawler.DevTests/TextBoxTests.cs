@@ -68,6 +68,34 @@ namespace ShapeCrawler.DevTests
         }
 
         [Test]
+        public void SetText_on_layout_matched_placeholder_preserves_inherited_font_size()
+        {
+            // Arrange
+            var pres = new Presentation(TestAsset("086.pptx"));
+            for (var i = pres.Slides.Count; i >= 1; i--)
+            {
+                pres.Slide(i).Remove();
+            }
+
+            var layout = pres.MasterSlides[0].SlideLayout("Title and Content");
+            pres.Slides.Add(layout.Number);
+            var slide = pres.Slide(pres.Slides.Count);
+            var titleShape = slide.Shapes.First(s => s.PlaceholderType == PlaceholderType.Title);
+            var titleTextBox = titleShape.TextBox!;
+            var inheritedSize = titleTextBox.Paragraphs.First().Portions.First().Font!.Size;
+
+            // Act
+            titleTextBox.SetText("Hello");
+
+            // Assert: SetText must not stamp the historical 14pt default on a placeholder
+            // whose font size is inherited from layout/master/theme.
+            var postSize = titleTextBox.Paragraphs.First().Portions.First().Font!.Size;
+            postSize.Should().Be(inheritedSize);
+            postSize.Should().NotBe(14);
+            ValidatePresentation(pres);
+        }
+
+        [Test]
         public void SetText_can_update_content_multiple_times()
         {
             // Arrange
@@ -397,6 +425,7 @@ namespace ShapeCrawler.DevTests
 
             // Assert
             shape.Height.Should().BeApproximately(32m, 32m);
+            ValidatePresentation(pres);
         }
 
         [Test]

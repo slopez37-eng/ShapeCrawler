@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using ShapeCrawler.Paragraphs;
+using A = DocumentFormat.OpenXml.Drawing;
 
 namespace ShapeCrawler.Texts;
 
@@ -21,40 +23,45 @@ internal sealed class TextContent(
         var paragraphsList = paragraphs.ToArray();
         var firstParagraph = paragraphsList.FirstOrDefault();
 
-        // Store LatinName from first portion if available
-        string? latinNameToPreserve = GetLatinNameToPreserve(firstParagraph);
-
-        // Store font color hex from first portion if available
-        string? colorHexToPreserve = GetFontColorHexToPreserve(firstParagraph);
+        var latinNameToPreserve = GetLatinNameToPreserve(firstParagraph);
+        var colorHexToPreserve = GetFontColorHexToPreserve(firstParagraph);
 
         // Clear existing content and ensure we have a first paragraph
         firstParagraph = this.PrepareContainer(firstParagraph, paragraphsList);
 
-        // Add new text with preserved font
         var paragraphLines = text.Split([Environment.NewLine], StringSplitOptions.None);
         this.AddToParagraphs(paragraphLines, firstParagraph, latinNameToPreserve);
-        if (colorHexToPreserve != null)
-        {
-            for (int i = 0; i < paragraphLines.Length; i++)
-            {
-                var portion = paragraphs[i].Portions.Last();
-                portion.Font!.Color.Set(colorHexToPreserve);
-            }
-        }
+        this.ApplyFontColorIfNeeded(paragraphLines, colorHexToPreserve);
 
         this.ApplyFormatting();
     }
 
     private static string? GetLatinNameToPreserve(IParagraph? firstParagraph)
     {
-        var firstPortion = firstParagraph?.Portions.FirstOrDefault();
-        return firstPortion?.Font!.LatinName;
+        var aRunProperties = FirstRunPropertiesOrNull(firstParagraph);
+        return aRunProperties?.GetFirstChild<A.LatinFont>()?.Typeface?.Value;
     }
 
     private static string? GetFontColorHexToPreserve(IParagraph? firstParagraph)
     {
+        var aRunProperties = FirstRunPropertiesOrNull(firstParagraph);
+        if (aRunProperties?.GetFirstChild<A.SolidFill>() == null)
+        {
+            return null;
+        }
+
         var firstPortion = firstParagraph?.Portions.FirstOrDefault();
         return firstPortion?.Font?.Color.Hex;
+    }
+
+    // Read Open XML directly so we only see properties explicitly set on the run.
+    // The IFont API resolves through layout/master/theme inheritance, which would
+    // cause inherited values to be re-stamped on new runs and break theme inheritance.
+    private static A.RunProperties? FirstRunPropertiesOrNull(IParagraph? firstParagraph)
+    {
+        return firstParagraph?.Portions.FirstOrDefault() is TextParagraphPortion textParagraphPortion
+            ? textParagraphPortion.AText.Parent?.GetFirstChild<A.RunProperties>()
+            : null;
     }
 
     private static void ApplyLatinNameIfNeeded(IParagraphPortion portion, string? latinNameToPreserve)
@@ -62,6 +69,20 @@ internal sealed class TextContent(
         if (latinNameToPreserve != null && portion.Font != null)
         {
             portion.Font.LatinName = latinNameToPreserve;
+        }
+    }
+
+    private void ApplyFontColorIfNeeded(string[] paragraphLines, string? colorHexToPreserve)
+    {
+        if (colorHexToPreserve == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < paragraphLines.Length; i++)
+        {
+            var portion = paragraphs[i].Portions.Last();
+            portion.Font!.Color.Set(colorHexToPreserve);
         }
     }
 
@@ -93,11 +114,9 @@ internal sealed class TextContent(
             return;
         }
 
-        // Add first line to the first paragraph
         firstParagraph.Portions.AddText(paragraphLines[0]);
         ApplyLatinNameIfNeeded(firstParagraph.Portions.Last(), latinNameToPreserve);
 
-        // Add remaining lines as new paragraphs
         for (int i = 1; i < paragraphLines.Length; i++)
         {
             paragraphs.Add();
