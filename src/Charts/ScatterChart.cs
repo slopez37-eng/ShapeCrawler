@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Packaging;
@@ -49,7 +50,7 @@ internal sealed class ScatterChart(
         foreach (var point in pointValues)
         {
             var numericPoint = new NumericPoint { Index = index };
-            numericPoint.AppendChild(new NumericValue(point.Key.ToString()));
+            numericPoint.AppendChild(new NumericValue(point.Key.ToString(CultureInfo.InvariantCulture)));
             xNumberLiteral.AppendChild(numericPoint);
             index++;
         }
@@ -69,7 +70,7 @@ internal sealed class ScatterChart(
         foreach (var point in pointValues)
         {
             var numericPoint = new NumericPoint { Index = index };
-            numericPoint.AppendChild(new NumericValue(point.Value.ToString()));
+            numericPoint.AppendChild(new NumericValue(point.Value.ToString(CultureInfo.InvariantCulture)));
             yNumberLiteral.AppendChild(numericPoint);
             index++;
         }

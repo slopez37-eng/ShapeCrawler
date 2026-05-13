@@ -1,5 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Threading;
 using Fixture;
 using FluentAssertions;
 using NUnit.Framework;
@@ -701,6 +703,37 @@ public class UserSlideShapeCollectionTests : SCTest
         var chart = shapes.First().ScatterChart;
         chart.Type.Should().Be(ChartType.ScatterChart);
         ValidatePresentation(pres);
+    }
+
+    [Test]
+    public void AddCharts_preserves_decimal_values_with_comma_decimal_current_culture()
+    {
+        // Arrange
+        var originalCulture = Thread.CurrentThread.CurrentCulture;
+        var originalUICulture = Thread.CurrentThread.CurrentUICulture;
+        try
+        {
+            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
+            Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("fr-FR");
+            var pres = new Presentation(p => p.Slide());
+            var shapes = pres.Slide(1).Shapes;
+
+            // Act
+            shapes.AddPieChart(10, 10, 300, 200, new Dictionary<string, double> { ["A"] = 1.5 }, "Series");
+            shapes.AddBarChart(10, 240, 300, 200, new Dictionary<string, double> { ["A"] = 1.5 }, "Series");
+            shapes.AddScatterChart(340, 10, 300, 200, new Dictionary<double, double> { [1.5] = 2.5 }, "Series");
+
+            // Assert
+            shapes[0].PieChart!.SeriesCollection[0].Points[0].Value.Should().Be(1.5);
+            shapes[1].ColumnChart!.SeriesCollection[0].Points[0].Value.Should().Be(1.5);
+            shapes[2].ScatterChart!.SeriesCollection[0].Points[0].Value.Should().Be(2.5);
+            ValidatePresentation(pres);
+        }
+        finally
+        {
+            Thread.CurrentThread.CurrentCulture = originalCulture;
+            Thread.CurrentThread.CurrentUICulture = originalUICulture;
+        }
     }
 
     [Test]
