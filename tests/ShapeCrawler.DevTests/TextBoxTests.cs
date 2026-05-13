@@ -527,6 +527,28 @@ namespace ShapeCrawler.DevTests
         }
 
         [Test]
+        public void SetText_splits_windows_line_breaks_without_preserving_carriage_return()
+        {
+            // Arrange
+            var pres = new Presentation(p => p.Slide());
+            var shapes = pres.Slide(1).Shapes;
+            shapes.AddShape(10, 10, 300, 120);
+            shapes.AddTable(10, 160, 1, 1);
+            var shapeTextBox = shapes[0].TextBox!;
+            var cellTextBox = shapes[1].Table![0, 0].TextBox;
+
+            // Act
+            shapeTextBox.SetText("Line 1\r\nLine 2");
+            cellTextBox.SetText("Cell 1\r\nCell 2");
+
+            // Assert
+            shapeTextBox.Paragraphs[0].Text.Should().Be("Line 1");
+            shapeTextBox.Paragraphs[1].Text.Should().Be("Line 2");
+            cellTextBox.Paragraphs[0].Text.Should().Be("Cell 1");
+            cellTextBox.Paragraphs[1].Text.Should().Be("Cell 2");
+        }
+
+        [Test]
         [SlideShape("073 replacing text.pptx", 1, "TextBox 3")]
         public void SetText_preserves_new_lines(IShape shape)
         {

@@ -29,7 +29,7 @@ internal sealed class TextContent(
         // Clear existing content and ensure we have a first paragraph
         firstParagraph = this.PrepareContainer(firstParagraph, paragraphsList);
 
-        var paragraphLines = text.Split([Environment.NewLine], StringSplitOptions.None);
+        var paragraphLines = new TextLineSegments(text).ToArray();
         this.AddToParagraphs(paragraphLines, firstParagraph, latinNameToPreserve);
         this.ApplyFontColorIfNeeded(paragraphLines, colorHexToPreserve);
 
