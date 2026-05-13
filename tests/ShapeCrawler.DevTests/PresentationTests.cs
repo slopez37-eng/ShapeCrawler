@@ -351,6 +351,48 @@ public class PresentationTests : SCTest
     }
 
     [Test]
+    public void Save_to_file_keeps_source_file_unchanged()
+    {
+        // Arrange
+        var sourceFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.pptx");
+        var copyFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.pptx");
+        try
+        {
+            using (var sourcePres = new Presentation(p => p.Slide(s => s.TextShape("Original", 10, 10, 300, 120))))
+            {
+                sourcePres.Save(sourceFile);
+            }
+
+            using (var changedPres = new Presentation(sourceFile))
+            {
+                changedPres.Slide(1).Shapes[0].TextBox!.SetText("Changed");
+
+                // Act
+                changedPres.Save(copyFile);
+            }
+
+            using var reopenedSource = new Presentation(sourceFile);
+            using var reopenedCopy = new Presentation(copyFile);
+
+            // Assert
+            reopenedSource.Slide(1).Shapes[0].TextBox!.Text.Should().Be("Original");
+            reopenedCopy.Slide(1).Shapes[0].TextBox!.Text.Should().Be("Changed");
+        }
+        finally
+        {
+            if (File.Exists(sourceFile))
+            {
+                File.Delete(sourceFile);
+            }
+
+            if (File.Exists(copyFile))
+            {
+                File.Delete(copyFile);
+            }
+        }
+    }
+
+    [Test]
     public void Save_should_not_throw_exception()
     {
         var presBytes = TestAsset("001.pptx").ToArray();
