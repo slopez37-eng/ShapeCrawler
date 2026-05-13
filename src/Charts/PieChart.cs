@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Packaging;
@@ -71,7 +72,7 @@ internal sealed class PieChart(
             numberLiteral.Append(new NumericPoint
             {
                 Index = catIndex,
-                NumericValue = new NumericValue(categoryToValue.Value.ToString())
+                NumericValue = new NumericValue(categoryToValue.Value.ToString(CultureInfo.InvariantCulture))
             });
             catIndex++;
         }
