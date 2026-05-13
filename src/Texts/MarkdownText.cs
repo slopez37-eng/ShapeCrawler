@@ -19,7 +19,7 @@ internal sealed class MarkdownText(
     /// </summary>
     internal void ApplyTo()
     {
-        var lines = Regex.Split(markdownText, "\r\n|\r|\n", RegexOptions.None, TimeSpan.FromMilliseconds(1000));
+        var lines = new TextLineSegments(markdownText).ToArray();
         if (IsList(lines))
         {
             this.RenderList(lines);
