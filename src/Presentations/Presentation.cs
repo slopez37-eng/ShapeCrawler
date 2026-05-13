@@ -211,7 +211,6 @@ public sealed class Presentation : IPresentation
     /// <inheritdoc />
     public void Save(string file)
     {
-        this.Save();
         using var stream = new FileStream(file, FileMode.Create);
         this.Save(stream);
     }
