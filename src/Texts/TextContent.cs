@@ -31,7 +31,7 @@ internal sealed class TextContent(
         firstParagraph = this.PrepareContainer(firstParagraph, paragraphsList);
 
         // Add new text with preserved font
-        var paragraphLines = text.Split([Environment.NewLine], StringSplitOptions.None);
+        var paragraphLines = new TextLineSegments(text).ToArray();
         this.AddToParagraphs(paragraphLines, firstParagraph, latinNameToPreserve);
         if (colorHexToPreserve != null)
         {
