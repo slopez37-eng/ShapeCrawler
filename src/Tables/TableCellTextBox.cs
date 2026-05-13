@@ -173,7 +173,7 @@ internal sealed class TableCellTextBox(A.TableCell aTableCell) : ITextBox
 
     public void SetText(string text)
     {
-        var textLines = SplitLines(text);
+        var textLines = new TextLineSegments(text).ToArray();
 
         var firstParagraph = this.EnsureFirstParagraph();
         this.RemoveExtraParagraphs();
@@ -187,11 +187,6 @@ internal sealed class TableCellTextBox(A.TableCell aTableCell) : ITextBox
         this.AddRemainingLinesAsParagraphs(textLines);
 
         this.AdjustRowHeightForCurrentContent();
-    }
-
-    private static string[] SplitLines(string text)
-    {
-        return text.Split([Environment.NewLine, "\n"], StringSplitOptions.None);
     }
 
     private static A.Table? GetATable(A.TableRow aTableRow)
