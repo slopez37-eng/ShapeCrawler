@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Packaging;
@@ -60,7 +61,7 @@ internal sealed class BarChart(
         foreach (var item in categoryValues)
         {
             var point = new NumericPoint { Index = index };
-            point.AppendChild(new NumericValue(item.Value.ToString()));
+            point.AppendChild(new NumericValue(item.Value.ToString(CultureInfo.InvariantCulture)));
             numberLiteral.AppendChild(point);
             index++;
         }
