@@ -47,6 +47,45 @@ public class TableTests : SCTest
     }
 
     [Test]
+    public void UpdateFill_sets_solid_fill_color_for_all_cells()
+    {
+        // Arrange
+        const string redColor = "FF0000";
+        var pres = new Presentation(pres =>
+        {
+            pres.Slide(slide =>
+            {
+                slide.TableShape(table =>
+                {
+                    table.Columns(2);
+                    table.Row(row =>
+                    {
+                        row.Cell();
+                        row.Cell();
+                    });
+                    table.Row(row =>
+                    {
+                        row.Cell();
+                        row.Cell();
+                    });
+                });
+            });
+        });
+        var table = pres.Slide(1).Shapes.First().Table!;
+
+        // Act
+        table.UpdateFill(redColor);
+
+        // Assert
+        foreach (var cell in table.Rows.SelectMany(row => row.Cells))
+        {
+            cell.Fill.Color.Should().Be(redColor);
+        }
+
+        ValidatePresentation(pres);
+    }
+
+    [Test]
     public void CellBorder_Getter_return_bottom_border_color()
     {
         // Arrange

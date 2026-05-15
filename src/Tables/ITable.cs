@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using DocumentFormat.OpenXml;
+using ShapeCrawler.Drawing;
 using ShapeCrawler.Tables;
 using A = DocumentFormat.OpenXml.Drawing;
 using P = DocumentFormat.OpenXml.Presentation;
@@ -82,7 +83,11 @@ internal sealed class Table(
 
     public void UpdateFill(string colorHex)
     {
-        throw new NotImplementedException();
+        foreach (var aTableCell in this.ATable.Elements<A.TableRow>().SelectMany(row => row.Elements<A.TableCell>()))
+        {
+            aTableCell.TableCellProperties ??= new A.TableCellProperties();
+            new TableCellFill(aTableCell.TableCellProperties).SetColor(colorHex);
+        }
     }
 
     public ITableCell Cell(int rowNumber, int columnNumber) => this.Rows[rowNumber - 1].Cells[columnNumber - 1];

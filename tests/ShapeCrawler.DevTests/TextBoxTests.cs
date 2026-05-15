@@ -154,6 +154,24 @@ namespace ShapeCrawler.DevTests
         }
 
         [Test]
+        public void SetMarkdownText_sets_table_cell_text()
+        {
+            // Arrange
+            var pres = new Presentation(p => p.Slide());
+            var shapes = pres.Slide(1).Shapes;
+            shapes.AddTable(100, 100, 200, 100);
+            var textBox = shapes.Last().Table![0, 0].TextBox;
+
+            // Act
+            textBox.SetMarkdownText("**Hello** World!");
+
+            // Assert
+            textBox.Paragraphs[0].Portions[0].Font!.IsBold.Should().BeTrue();
+            textBox.Paragraphs[0].Portions[1].Font!.IsBold.Should().BeFalse();
+            ValidatePresentation(pres);
+        }
+
+        [Test]
         public void SetMarkdownText_sets_list()
         {
             // Arrange
