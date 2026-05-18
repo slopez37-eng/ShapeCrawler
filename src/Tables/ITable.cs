@@ -82,7 +82,10 @@ internal sealed class Table(
 
     public void UpdateFill(string colorHex)
     {
-        throw new NotImplementedException();
+        foreach (var cell in this.Rows.SelectMany(row => row.Cells))
+        {
+            cell.Fill.SetColor(colorHex);
+        }
     }
 
     public ITableCell Cell(int rowNumber, int columnNumber) => this.Rows[rowNumber - 1].Cells[columnNumber - 1];
