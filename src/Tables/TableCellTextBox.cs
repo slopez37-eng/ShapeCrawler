@@ -168,7 +168,13 @@ internal sealed class TableCellTextBox(A.TableCell aTableCell) : ITextBox
 
     public void SetMarkdownText(string text)
     {
-        throw new NotImplementedException();
+        var markdownText = new MarkdownText(
+            text,
+            this.Paragraphs,
+            () => this.AutofitType,
+            _ => { },
+            this.AdjustRowHeightForCurrentContent);
+        markdownText.ApplyTo();
     }
 
     public void SetText(string text)
