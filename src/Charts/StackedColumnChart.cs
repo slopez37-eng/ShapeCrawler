@@ -148,6 +148,9 @@ internal sealed class StackedColumnChart(
         // Add the chart to the chart space
         chartSpace.AppendChild(chart);
 
+        // Opaque background so bars stay visible when the slide background matches the default series color
+        chartSpace.AppendChild(new ShapeProperties(new DocumentFormat.OpenXml.Drawing.SolidFill(new DocumentFormat.OpenXml.Drawing.RgbColorModelHex { Val = "FFFFFF" })));
+
         // Create embedded package part for data
         var excelPackagePart = chartPart.AddNewPart<EmbeddedPackagePart>(
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Microsoft_Excel_Sheet1");

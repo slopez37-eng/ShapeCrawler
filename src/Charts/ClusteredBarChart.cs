@@ -74,6 +74,9 @@ internal sealed class ClusteredBarChart(
         chart.AppendChild(plotArea);
         chartSpace.AppendChild(chart);
 
+        // Opaque background so bars stay visible when the slide background matches the default series color
+        chartSpace.AppendChild(new ShapeProperties(new DocumentFormat.OpenXml.Drawing.SolidFill(new DocumentFormat.OpenXml.Drawing.RgbColorModelHex { Val = "FFFFFF" })));
+
         return chartSpace;
     }
 

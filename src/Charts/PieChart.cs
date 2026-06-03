@@ -93,6 +93,9 @@ internal sealed class PieChart(
         chart.Append(cLegend);
 
         chartSpace.Append(chart);
+
+        // Opaque background so slices stay visible when the slide background matches the default series color
+        chartSpace.Append(new ShapeProperties(new DocumentFormat.OpenXml.Drawing.SolidFill(new DocumentFormat.OpenXml.Drawing.RgbColorModelHex { Val = "FFFFFF" })));
         chartPart.ChartSpace = chartSpace;
 
         pieChart.Append(
